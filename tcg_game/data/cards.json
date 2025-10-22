@@ -1,0 +1,16 @@
+[
+  {"name": "Slash", "type": "attack", "power": 5, "description": "Basic attack."},
+  {"name": "Slash", "type": "attack", "power": 5, "description": "Basic attack."},
+  {"name": "Slash", "type": "attack", "power": 5, "description": "Basic attack."},
+  {"name": "Slash", "type": "attack", "power": 5, "description": "Basic attack."},
+  {"name": "Slash", "type": "attack", "power": 5, "description": "Basic attack."},
+  {"name": "Overhead", "type": "attack", "power": 10, "description": "Skill attack."},
+  {"name": "Overhead", "type": "attack", "power": 10, "description": "Skill attack."},
+  {"name": "Overhead", "type": "attack", "power": 10, "description": "Skill attack."},
+  {"name": "Guard", "type": "defense", "power": 5, "description": "Gain block."},
+  {"name": "Guard", "type": "defense", "power": 5, "description": "Gain block."},
+  {"name": "Guard", "type": "defense", "power": 5, "description": "Gain block."},
+  {"name": "Guard", "type": "defense", "power": 5, "description": "Gain block."},
+  {"name": "Minor Heal", "type": "heal", "power": 8, "description": "Restore 8 HP."},
+  {"name": "Minor Heal", "type": "heal", "power": 8, "description": "Restore 8 HP."}
+]

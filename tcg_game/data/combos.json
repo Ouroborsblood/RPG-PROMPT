@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Tornado Slash",
+    "require": { "Slash": 3 },
+    "type": "combo",
+    "effect": { "damage": 20, "description": "Serangan berputar mematikan." },
+    "mp_cost": 20
+  },
+  {
+    "name": "Mega Heal",
+    "require": { "Heal": 3 },
+    "type": "combo",
+    "effect": { "heal": 15, "description": "Penyembuhan besar memulihkan banyak HP." },
+    "mp_cost": 10
+  },
+  {
+    "name": "Berserk",
+    "require": { "Battle Roar": 2, "Burning Aura": 1 },
+    "type": "combo",
+    "effect": {
+      "buff_damage": 5,
+      "hot": { "power": 3, "turns": 2 },
+      "description": "Amukan brutal meningkatkan damage dan regenerasi."},
+      "mp_cost": 10
+  }
+]

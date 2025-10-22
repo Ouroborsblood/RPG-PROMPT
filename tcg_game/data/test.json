@@ -1,0 +1,16 @@
+[
+  { "name": "Slash", "type": "attack", "power": 5, "mp_cost": 3, "rate": 12, "description": "Basic attack." },
+  { "name": "Overhead", "type": "attack", "power": 10, "mp_cost": 8, "rate": 6, "description": "Strong attack." },
+  { "name": "Shield Up", "type": "defense", "power": 8, "mp_cost": 5, "rate": 10, "description": "Gain shield." },
+  { "name": "Poison Strike", "type": "dot", "power": 3, "turns": 3, "mp_cost": 6, "rate": 8, "description": "Apply poison (DoT)." },
+  { "name": "Burning Aura", "type": "hot", "power": 2, "turns": 3, "mp_cost": 6, "rate": 8, "description": "HoT on self." },
+  { "name": "Cleave (Life Steal)", "type": "lifesteal", "power": 6, "ratio": 0.5, "mp_cost": 10, "rate": 5, "description": "Deal damage and heal 50% of damage dealt." },
+  { "name": "True Strike", "type": "attack_true", "power": 7, "mp_cost": 9, "rate": 5, "description": "Ignores shield." },
+  { "name": "Battle Roar", "type": "buff", "power": 3, "stat": "damage", "turns": 2, "mp_cost": 7, "rate": 7, "description": "Increase outgoing damage for 2 turns." },
+  { "name": "Cleanse", "type": "clean", "mp_cost": 5, "rate": 8, "description": "Remove negative effects." },
+  { "name": "Counter Stance", "type": "counter", "turns": 1, "mp_cost": 8, "rate": 6, "description": "Block first incoming damage this turn and reflect it." },
+  { "name": "Spiky Aura", "type": "reflect", "ratio": 0.25, "turns": 2, "mp_cost": 9, "rate": 5, "description": "Reflect 25% of damage taken for 2 turns." },
+  { "name": "Harden", "type": "reduce", "ratio": 0.3, "turns": 2, "mp_cost": 7, "rate": 6, "description": "Reduce incoming damage by 30% for 2 turns." },
+  { "name": "Strip", "type": "strip", "mp_cost": 6, "rate": 7, "description": "Remove enemy buffs & shield." },
+  { "name": "Dispel Field", "type": "strip", "targets": ["buff", "hot", "reflect", "reduce"], "mp_cost": 10, "rate": 4, "description": "Remove enemy buffs and defensive effects." }
+]

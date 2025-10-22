@@ -1,0 +1,9 @@
+[
+ { "name": "Slash", "type": "attack", "power": 5, "mp_cost": 3, "rate": 50, "description": "Basic attack." },
+ { "name": "Overhead", "type": "attack", "power": 10, "mp_cost": 8, "rate": 10, "description": "Strong attack." },
+ { "name": "Battle Roar", "type": "buff", "power": 3, "stat": "damage", "turns": 2, "mp_cost": 7, "rate": 25, "description": "Increase outgoing damage for 2 turns." },
+ { "name": "Burning Aura", "type": "hot", "power": 2, "turns": 3, "mp_cost": 6, "rate": 25, "description": "HoT on self." },
+ { "name": "Counter Stance", "type": "counter", "turns": 1, "mp_cost": 8, "rate": 10, "description": "Block first incoming damage this turn and reflect it." }
+]    
+
+
