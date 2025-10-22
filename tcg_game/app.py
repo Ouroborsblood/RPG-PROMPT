@@ -17,7 +17,7 @@ ENEMY_FILE = os.path.join(BASE_PATH, "data/cards_enemy.json")
 COMBO_FILE = os.path.join(BASE_PATH, "data/combos.json")
 
 # ----------------------
-# Load combo data
+# Load combos
 # ----------------------
 try:
     combos = load_json("data/combos.json")
@@ -25,7 +25,7 @@ except Exception:
     combos = []
 
 # ----------------------
-# Session State Setup
+# Session state
 # ----------------------
 if "logger" not in st.session_state:
     st.session_state.logger = BattleLogger()
@@ -37,39 +37,37 @@ if "enemy" not in st.session_state:
     st.session_state.enemy = Player("Enemy", ENEMY_FILE)
 
 if "ai" not in st.session_state:
-    st.session_state.ai = WarriorAI()  # Bisa diganti MageAI()
+    st.session_state.ai = WarriorAI()
 
 if "battle" not in st.session_state:
     st.session_state.battle = Battle(
         st.session_state.hero,
-        st.session_state.enemy,
-        logger=st.session_state.logger
+        st.session_state.enemy
     )
 
 if "turn" not in st.session_state:
     st.session_state.turn = 1
 
 # ----------------------
-# Streamlit Layout
+# Streamlit layout
 # ----------------------
 st.title("RPG TCG Battle")
-
 st.subheader(f"Turn: {st.session_state.turn}")
 
 hero = st.session_state.hero
 enemy = st.session_state.enemy
 battle = st.session_state.battle
-logger = st.session_state.logger
 ai = st.session_state.ai
+logger = st.session_state.logger
 
 # ----------------------
-# Show HP / MP / Shield
+# Show status
 # ----------------------
 st.markdown(f"**Hero:** HP={hero.hp}/{hero.max_hp}, MP={hero.mp}/{hero.max_mp}, Shield={hero.shield}")
 st.markdown(f"**Enemy:** HP={enemy.hp}/{enemy.max_hp}, MP={enemy.mp}/{enemy.max_mp}, Shield={enemy.shield}")
 
 # ----------------------
-# Show hands
+# Hero hand
 # ----------------------
 st.markdown("### Hero Hand")
 for i, card in enumerate(hero.deck.hand):
@@ -81,18 +79,18 @@ for i, card in enumerate(hero.deck.hand):
 card_idx = st.selectbox("Pilih kartu untuk dimainkan (Hero)", list(range(len(hero.deck.hand))), format_func=lambda x: hero.deck.hand[x]['name'] if hero.deck.hand else "Kosong")
 
 if st.button("Next Turn"):
-    # Hero action
+    # Hero plays
     if hero.deck.hand:
         card_obj = hero.deck.hand[card_idx]
         hero.deck.play_card_by_obj(card_obj)
         battle.effect_engine.apply(hero, enemy, card_obj)
 
-    # Enemy AI action
+    # Enemy AI plays
     enemy_cards = ai.choose_actions(enemy, hero, combos)
     for c in enemy_cards:
         battle.effect_engine.apply(enemy, hero, c)
 
-    # End-of-turn effects
+    # End of turn effects
     hero.end_of_turn_effects()
     enemy.end_of_turn_effects()
 
@@ -102,8 +100,8 @@ if st.button("Next Turn"):
     st.session_state.turn += 1
 
 # ----------------------
-# Show logger
+# Show last logs
 # ----------------------
 st.markdown("### Battle Log")
-for log_entry in logger.logs[-10:]:  # tampilkan 10 log terakhir
+for log_entry in logger.logs[-10:]:
     st.text(log_entry)
