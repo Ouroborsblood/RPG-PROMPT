@@ -61,7 +61,7 @@ if play_button:
     st.session_state.log_lines.append(f"{hero.name} memainkan {card_to_play.get('name')}")
 
     # Enemy AI pilih kartu
-    enemy_card = ai.choose_card(enemy, hero)
+    enemy_cards = ai.choose_actions(enemy, hero, combos)
     enemy.deck.play_card_by_obj(enemy_card)
     st.session_state.log_lines.append(f"{enemy.name} memainkan {enemy_card.get('name')}")
 
