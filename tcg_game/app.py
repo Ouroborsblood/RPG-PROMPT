@@ -6,98 +6,100 @@ from core.battle import Battle
 from core.ai.warrior_ai import WarriorAI
 from core.ai.mage_ai import MageAI
 
-# -----------------------
-# Setup paths
-# -----------------------
-BASE_PATH = os.getcwd()
+# -------------------- Setup Paths --------------------
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
-HERO_FILE = os.path.join(BASE_PATH, "data", "test2.json")
-ENEMY_FILE = os.path.join(BASE_PATH, "data", "cards_enemy.json")
+HERO_FILE = os.path.join(BASE_PATH, "data/test2.json")
+ENEMY_FILE = os.path.join(BASE_PATH, "data/cards_enemy.json")
 
-st.write("BASE PATH:", BASE_PATH)
-st.write("HERO FILE EXISTS:", os.path.exists(HERO_FILE))
-st.write("ENEMY FILE EXISTS:", os.path.exists(ENEMY_FILE))
-
+# Pastikan file ada
 if not os.path.exists(HERO_FILE) or not os.path.exists(ENEMY_FILE):
     st.error("JSON file hero atau enemy tidak ditemukan! Pastikan ada di folder 'data/'")
     st.stop()
 
-# -----------------------
-# Initialize session state
-# -----------------------
+# -------------------- Session State --------------------
 if "hero" not in st.session_state:
     st.session_state.hero = Player("Hero", HERO_FILE)
-    st.session_state.hero.start_game()
 
 if "enemy" not in st.session_state:
     st.session_state.enemy = Player("Enemy", ENEMY_FILE)
-    st.session_state.enemy.start_game()
 
 if "battle" not in st.session_state:
     st.session_state.battle = Battle(st.session_state.hero, st.session_state.enemy)
 
-# -----------------------
-# AI Setup
-# -----------------------
-AI_CHOICE = st.radio("Pilih AI musuh:", ("WarriorAI", "MageAI"))
-if "ai" not in st.session_state or st.session_state.ai_name != AI_CHOICE:
-    if AI_CHOICE == "WarriorAI":
-        st.session_state.ai = WarriorAI()
-    else:
-        st.session_state.ai = MageAI()
-    st.session_state.ai_name = AI_CHOICE
+if "ai" not in st.session_state:
+    # Pilih AI yang diinginkan
+    st.session_state.ai = WarriorAI()  # bisa diganti MageAI()
 
-# -----------------------
-# Display hands
-# -----------------------
-st.subheader("Kartu Hero")
-hero_hand = st.session_state.hero.deck.hand
-selected_indices = st.multiselect("Pilih kartu yang akan dimainkan:", list(range(len(hero_hand))),
-                                  format_func=lambda i: f"{i+1}. {hero_hand[i]['name']} ({hero_hand[i]['type']})")
+if "log" not in st.session_state:
+    st.session_state.log = []
 
-st.subheader("Kartu Musuh")
-enemy_hand = st.session_state.enemy.deck.hand
-st.write([f"{c['name']} ({c['type']})" for c in enemy_hand])
+# -------------------- Helper --------------------
+def add_log(msg):
+    st.session_state.log.append(msg)
+    st.experimental_rerun()  # refresh UI supaya log tampil
 
-# -----------------------
-# Next Turn Button
-# -----------------------
-if st.button("Next Turn"):
-    hero = st.session_state.hero
-    enemy = st.session_state.enemy
+def show_hand_with_click(player):
+    st.write(f"### {player.name}'s Hand (MP: {player.mp}/{player.max_mp})")
+    hand = player.deck.hand
+    if not hand:
+        st.write("*(Kosong)*")
+        return None
+
+    choices = []
+    for i, c in enumerate(hand):
+        name = c.get("name")
+        cost = c.get("power")  # asumsi power = MP cost
+        ctype = c.get("type")
+        desc = c.get("description", "")
+        label = f"{name} ({ctype}, power {cost}) - {desc}"
+        choices.append(label)
+
+    selected_index = st.radio("Pilih kartu untuk dimainkan:", list(range(len(hand))), format_func=lambda x: choices[x])
+    return selected_index
+
+# -------------------- Main UI --------------------
+st.title("🃏 RPG TCG Streamlit")
+
+# Tampilkan HP, Shield, Effects
+hero = st.session_state.hero
+enemy = st.session_state.enemy
+
+st.write(f"**Hero**: HP {hero.hp}/{hero.max_hp} | Shield {hero.shield} | MP {hero.mp}/{hero.max_mp}")
+st.write(f"**Enemy**: HP {enemy.hp}/{enemy.max_hp} | Shield {enemy.shield}")
+
+st.write("---")
+
+# -------------------- Hero Turn --------------------
+selected_card_index = show_hand_with_click(hero)
+
+if st.button("Play Selected Card") and selected_card_index is not None:
+    try:
+        card = hero.deck.play_card(selected_card_index)
+        # Terapkan efek (langsung ke enemy)
+        st.session_state.battle.combat.effects.apply(hero, enemy, card)
+        hero.turn_history.append(card.get("name"))
+        add_log(f"{hero.name} played {card.get('name')}!")
+    except Exception as e:
+        st.error(f"Error saat memainkan kartu: {e}")
+
+# -------------------- Enemy Turn --------------------
+if st.button("Enemy Turn"):
     ai = st.session_state.ai
+    enemy_cards = ai.choose_actions(enemy, hero, combos=[])  # combos kosong jika belum ada
+    for c in enemy_cards:
+        st.session_state.battle.combat.effects.apply(enemy, hero, c)
+    add_log(f"{enemy.name} finished its turn.")
 
-    # -------------------
-    # Pilih kartu Hero
-    # -------------------
-    hero_cards = [hero_hand[i] for i in selected_indices]
+# -------------------- Game Log --------------------
+st.write("### Game Log")
+for msg in st.session_state.log:
+    st.write(msg)
 
-    # -------------------
-    # Pilih kartu AI
-    # -------------------
-    combos = {}  # bisa diisi combo data jika ada
-    enemy_cards = ai.choose_actions(enemy, hero, combos)
-
-    # -------------------
-    # Resolve turn
-    # -------------------
-    st.session_state.battle.resolve_turn(hero, enemy, hero_cards, enemy_cards)
-
-    # -------------------
-    # End turn effects
-    # -------------------
+# -------------------- End Turn --------------------
+if st.button("End Turn"):
     hero.end_of_turn_effects()
     enemy.end_of_turn_effects()
-
-    # -------------------
-    # Refill hands
-    # -------------------
     hero.begin_turn()
     enemy.begin_turn()
-
-    # -------------------
-    # Status update
-    # -------------------
-    st.write(f"Hero HP: {hero.hp} | Shield: {hero.shield} | MP: {hero.mp}")
-    st.write(f"Enemy HP: {enemy.hp} | Shield: {enemy.shield} | MP: {enemy.mp}")
+    add_log("→ New Turn begins")
 
