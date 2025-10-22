@@ -10,6 +10,7 @@ from core.ai.mage_ai import MageAI
 # Setup paths
 # -----------------------
 BASE_PATH = os.getcwd()
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 HERO_FILE = os.path.join(BASE_PATH, "data", "test2.json")
 ENEMY_FILE = os.path.join(BASE_PATH, "data", "cards_enemy.json")
 
