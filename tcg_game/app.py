@@ -7,107 +7,93 @@ from core.ai.warrior_ai import WarriorAI
 from core.ai.mage_ai import MageAI
 from core.utils import load_json
 
-st.set_page_config(page_title="TGC Battle", layout="wide")
-
-# ---------------------------------------
-# Base path & data files
-# ---------------------------------------
+# ----------------------------
+# BASE PATH & FILES
+# ----------------------------
 BASE_PATH = os.path.dirname(__file__)
 HERO_FILE = os.path.join(BASE_PATH, "data", "test2.json")
 ENEMY_FILE = os.path.join(BASE_PATH, "data", "cards_enemy.json")
 COMBO_FILE = os.path.join(BASE_PATH, "data", "combos.json")
 
-# Debug check
-st.text(f"BASE PATH: {BASE_PATH}")
+st.title("⚔️ RPG TCG Battle")
+
+# ----------------------------
+# PASTIKAN FILE ADA
+# ----------------------------
 st.text(f"Hero file exists: {os.path.exists(HERO_FILE)}")
 st.text(f"Enemy file exists: {os.path.exists(ENEMY_FILE)}")
+st.text(f"Combo file exists: {os.path.exists(COMBO_FILE)}")
 
-# ---------------------------------------
-# Session State: Player & AI init
-# ---------------------------------------
+if not (os.path.exists(HERO_FILE) and os.path.exists(ENEMY_FILE)):
+    st.error("❌ File JSON tidak ditemukan. Pastikan folder data/ ada di repo.")
+    st.stop()
+
+# ----------------------------
+# MUAT DATA
+# ----------------------------
+try:
+    combos = load_json("data/combos.json")
+except Exception:
+    combos = []
+
+# ----------------------------
+# INISIALISASI PLAYER
+# ----------------------------
 if "hero" not in st.session_state:
     st.session_state.hero = Player("Hero", HERO_FILE)
-    st.session_state.hero.start_game()
-
 if "enemy" not in st.session_state:
     st.session_state.enemy = Player("Enemy", ENEMY_FILE)
-    st.session_state.enemy.start_game()
 
-if "battle" not in st.session_state:
-    st.session_state.battle = Battle(st.session_state.hero, st.session_state.enemy)
+# Pilih AI
+ai_choice = st.selectbox("Pilih AI Enemy", ["WarriorAI", "MageAI"])
+if ai_choice == "WarriorAI":
+    ai = WarriorAI()
+else:
+    ai = MageAI()
 
-if "ai" not in st.session_state:
-    # bisa pilih WarriorAI / MageAI
-    st.session_state.ai = WarriorAI()
-
-# Load combos
-if "combos" not in st.session_state:
-    st.session_state.combos = load_json(COMBO_FILE)
-
-# ---------------------------------------
-# Show Hero hand (click box)
-# ---------------------------------------
-st.header("Your Hand")
-hero_hand = st.session_state.hero.deck.hand
-hand_options = [f"{c['name']} ({c['type']}, {c.get('power', 0)})" for c in hero_hand]
-selected = st.multiselect("Select cards to play (max 2):", hand_options, max_selections=2)
-
-# Map selected strings back to card objects
-selected_cards = []
-for s in selected:
-    for c in hero_hand:
-        desc = f"{c['name']} ({c['type']}, {c.get('power', 0)})"
-        if s == desc:
-            selected_cards.append(c)
-
-# ---------------------------------------
-# Process Turn
-# ---------------------------------------
-if st.button("Next Turn"):
+# ----------------------------
+# MAIN GAME LOOP
+# ----------------------------
+def next_turn():
     hero = st.session_state.hero
     enemy = st.session_state.enemy
-    ai = st.session_state.ai
-    combos = st.session_state.combos
-    battle = st.session_state.battle
 
-    # Hero play selected cards
-    hero_played = []
-    for c in selected_cards:
-        hero.deck.play_card_by_obj(c)
-        hero_played.append(c)
-    enemy_played = ai.choose_actions(enemy, hero, combos)
+    # Hero pilih kartu dari hand
+    hand = hero.deck.hand
+    if not hand:
+        st.warning("Hero tidak punya kartu di tangan!")
+        return
 
-    # Resolve turn
-    battle.combat.resolve_turn(hero, enemy, hero_played, enemy_played)
+    card_names = [c["name"] for c in hand]
+    selected_name = st.session_state.get("selected_card")
+    if selected_name not in card_names:
+        selected_name = card_names[0]
 
-    # End of turn effects
-    hero.end_of_turn_effects()
-    enemy.end_of_turn_effects()
-    hero.begin_turn()
-    enemy.begin_turn()
+    # Temukan kartu yg dipilih
+    selected_card = next(c for c in hand if c["name"] == selected_name)
 
-    # Clear selected for next turn
-    selected.clear()
-    st.experimental_rerun()
+    # Play kartu
+    hero.deck.play_card_by_obj(selected_card)
+    st.write(f"✅ Hero memainkan [{selected_card['name']}]")
 
-# ---------------------------------------
-# Display Status
-# ---------------------------------------
-st.subheader("Hero Status")
-st.write(f"HP: {st.session_state.hero.hp}/{st.session_state.hero.max_hp}")
-st.write(f"MP: {st.session_state.hero.mp}/{st.session_state.hero.max_mp}")
-st.write(f"Shield: {st.session_state.hero.shield}")
-st.write("Effects:", st.session_state.hero.effects)
+    # Enemy giliran AI
+    enemy_cards = ai.choose_actions(st.session_state.enemy, st.session_state.hero, combos)
+    st.write(f"⚔️ Enemy memainkan {', '.join([c['name'] for c in enemy_cards])}")
 
-st.subheader("Enemy Status")
-st.write(f"HP: {st.session_state.enemy.hp}/{st.session_state.enemy.max_hp}")
-st.write(f"MP: {st.session_state.enemy.mp}/{st.session_state.enemy.max_mp}")
-st.write(f"Shield: {st.session_state.enemy.shield}")
-st.write("Effects:", st.session_state.enemy.effects)
+    # Jalankan battle resolution
+    battle = Battle(hero, enemy)
+    battle.combat.resolve_turn(hero, enemy, [selected_card], enemy_cards)
 
-# ---------------------------------------
-# Show Hero Hand
-# ---------------------------------------
-st.subheader("Hero Hand")
-for i, c in enumerate(st.session_state.hero.deck.hand):
-    st.write(f"{i+1}. {c['name']} ({c['type']}, {c.get('power', 0)})")
+    # Tampilkan HP & Shield
+    st.text(f"Hero: HP={hero.hp}, Shield={hero.shield}")
+    st.text(f"Enemy: HP={enemy.hp}, Shield={enemy.shield}")
+
+# ----------------------------
+# Pilih kartu via selectbox
+# ----------------------------
+hero = st.session_state.hero
+hand_names = [c["name"] for c in hero.deck.hand]
+st.selectbox("Pilih kartu untuk dimainkan", hand_names, key="selected_card")
+
+# Tombol Next
+st.button("▶️ Next Turn", on_click=next_turn)
